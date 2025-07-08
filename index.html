@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>陸上フォームAIコーチ</title>
+<style>
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #D14747 0%, #5BB0F7 100%);
+    color: #fff;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  header {
+    padding: 1rem; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.05em;
+    text-align: center;
+    user-select: none;
+    margin-bottom: 0.5rem;
+  }
+  #app {
+    background: #fff;
+    color: #222;
+    border-radius: 1rem 1rem 0 0;
+    width: 100%;
+    max-width: 900px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  nav {
+    display: flex;
+    border-bottom: 2px solid #ddd;
+  }
+  nav button {
+    flex: 1;
+    padding: 1rem 0;
+    border: none;
+    background: #eee;
+    color: #444;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+  }
+  nav button.active {
+    background: #D14747;
+    color: white;
+  }
+  main {
+    padding: 1rem;
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+  video, canvas {
+    width: 100%;
+    border-radius: 1rem;
+    background: #000;
+    max-height: 360px;
+  }
+  button, input, select, textarea {
+    font-family: inherit;
+    font-size: 1rem;
+  }
+  button {
+    background: #D14747;
+    border: none;
+    color: white;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem 0.2rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #af3a3a;
+  }
+  input[type=number] {
+    width: 4rem;
+    text-align: center;
+  }
+  label {
+    margin-right: 1rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  textarea {
+    width: 100%;
+    min-height: 6rem;
+    resize: vertical;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+  }
+  #historyList {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background: #fafafa;
+  }
+  #qrCodeCanvas {
+    margin-top: 0.5rem;
+    max-width: 160px;
+    max-height: 160px;
+  }
+</style>
+</head>
+<body>
+<header>陸上フォームAIコーチ</header>
+<div id="app">
+  <nav>
+    <button class="tabBtn active" data-tab="record">録画</button>
+    <button class="tabBtn" data-tab="feedback">AIフィードバック</button>
+    <button class="tabBtn" data-tab="history">履歴</button>
+    <button class="tabBtn" data-tab="template">テンプレ編集</button>
+    <button class="tabBtn" data-tab="settings">設定</button>
+  </nav>
+  <main>
+    <section id="record" class="tabContent">
+      <video id="videoPreview" autoplay muted playsinline></video>
+      <div>
+        <button id="startRecordBtn">録画開始</button>
+        <button id="stopRecordBtn" disabled>録画停止</button>
+        <label>遅延秒数 <input id="delayInput" type="number" min="0" max="60" value="5" /></label>
+        <button id="saveMp4Btn" disabled>MP4保存</button>
+      </div>
+      <div>
+        <label><input type="checkbox" id="enableAudioCount" checked /> 音声カウント有効</label>
+      </div>
+    </section>
+    <section id="feedback" class="tabContent" style="display:none;">
+      <button id="requestFeedbackBtn" disabled>AIフィードバック生成</button>
+      <textarea id="feedbackText" readonly placeholder="フィードバックがここに表示されます"></textarea>
+      <button id="playFeedbackAudioBtn" disabled>音声読み上げ</button>
+    </section>
+    <section id="history" class="tabContent" style="display:none;">
+      <div id="historyList"></div>
+      <button id="clearHistoryBtn">履歴クリア</button>
+      <canvas id="qrCodeCanvas"></canvas>
+    </section>
+    <section id="template" class="tabContent" style="display:none;">
+      <textarea id="templateEditor" style="height: 200px;"></textarea>
+      <button id="saveTemplateBtn">テンプレート保存</button>
+      <button id="resetTemplateBtn">デフォルトに戻す</button>
+    </section>
+    <section id="settings" class="tabContent" style="display:none;">
+      <label>姿勢推定モデル
+        <select id="poseModelSelect">
+          <option value="lite">軽量モデル (MediaPipe Pose)</option>
+          <option value="high">高精度モデル (MoveNet)</option>
+        </select>
+      </label>
+      <br />
+      <label>遅延秒数（最大60秒）
+        <input type="number" id="delaySettingInput" min="0" max="60" value="5" />
+      </label>
+      <br />
+      <label><input type="checkbox" id="enableAudioCountSetting" checked /> 音声カウント有効</label>
+    </section>
+  </main>
+</div>
+<script src=\"https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js\"></script>
+<script src=\"app.js\"></script>
+</body>
+</html>
