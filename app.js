@@ -1,7 +1,7 @@
 // app.js
 
 // --------------- 定数・グローバル変数 ---------------
-const GAS_API_URL = 'https://script.google.com/macros/s/YOUR_GAS_DEPLOY_URL/exec'; // 差し替え必須
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby3hf-Nl4Mr0aew5Sy5eH3dbT4sR5EMaC_EOi_wRLWHorAzmDQWPQQj62n_YsbtYF2t/exec'; // 差し替え必須
 
 const DB_NAME = 'TrackFormAI';
 const DB_STORE = 'records';
