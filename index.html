@@ -2,172 +2,259 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>陸上フォームAIコーチ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>陸上フォーム解析アプリ</title>
 <style>
+  /* リセット＆ベース */
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+  }
   body {
     font-family: 'Noto Sans JP', sans-serif;
-    margin: 0; padding: 0;
-    background: linear-gradient(135deg, #D14747 0%, #5BB0F7 100%);
-    color: #fff;
-    min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center;
-  }
-  header {
-    padding: 1rem; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.05em;
-    text-align: center;
-    user-select: none;
-    margin-bottom: 0.5rem;
-  }
-  #app {
-    background: #fff;
+    background: linear-gradient(135deg, #f4f7f6 0%, #d0e8f2 100%);
     color: #222;
-    border-radius: 1rem 1rem 0 0;
-    width: 100%;
-    max-width: 900px;
-    flex-grow: 1;
+    min-height: 100vh;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-  }
-  nav {
-    display: flex;
-    border-bottom: 2px solid #ddd;
-  }
-  nav button {
-    flex: 1;
-    padding: 1rem 0;
-    border: none;
-    background: #eee;
-    color: #444;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.3s, color 0.3s;
-  }
-  nav button.active {
-    background: #D14747;
-    color: white;
-  }
-  main {
-    padding: 1rem;
-    flex-grow: 1;
-    overflow-y: auto;
-  }
-  video, canvas {
-    width: 100%;
-    border-radius: 1rem;
-    background: #000;
-    max-height: 360px;
-  }
-  button, input, select, textarea {
-    font-family: inherit;
-    font-size: 1rem;
-  }
-  button {
-    background: #D14747;
-    border: none;
-    color: white;
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
-    margin: 0.5rem 0.2rem;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.3s ease;
-  }
-  button:hover {
-    background: #af3a3a;
-  }
-  input[type=number] {
-    width: 4rem;
-    text-align: center;
-  }
-  label {
-    margin-right: 1rem;
-    display: inline-flex;
     align-items: center;
   }
-  textarea {
+
+  h1 {
+    margin-bottom: 1rem;
+    color: #004080;
+    text-shadow: 1px 1px 3px #c0d8e8;
+  }
+
+  /* ビデオ・キャンバス */
+  #videoContainer {
+    position: relative;
+    width: 480px;
+    max-width: 90vw;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    margin-bottom: 1rem;
+    background: #000;
+  }
+  video#videoPreview, canvas#poseCanvas {
     width: 100%;
-    min-height: 6rem;
-    resize: vertical;
-    margin-top: 0.5rem;
+    height: auto;
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+  }
+  canvas#poseCanvas {
+    pointer-events: none;
+  }
+
+  /* 操作ボタン群 */
+  #controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  button {
+    background: #0077cc;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  button:disabled {
+    background: #a0b8d6;
+    cursor: default;
+  }
+  button:hover:not(:disabled) {
+    background: #005fa3;
+  }
+
+  /* フィードバック表示 */
+  #feedbackText {
+    width: 480px;
+    max-width: 90vw;
+    height: 120px;
+    margin-bottom: 1rem;
     padding: 0.5rem;
+    border-radius: 6px;
+    border: 2px solid #0077cc;
+    font-size: 1rem;
+    background: #e9f0f7;
+    resize: none;
+    white-space: pre-wrap;
+  }
+
+  /* 設定エリア */
+  #settings {
+    width: 480px;
+    max-width: 90vw;
+    background: #dbe9f4;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px #a0c1e0;
+    margin-bottom: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(150px,1fr));
+    gap: 1rem;
+  }
+  label {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: #003366;
+  }
+  input[type=number] {
+    width: 60px;
+    margin-left: 0.5rem;
+    padding: 0.25rem;
+    border-radius: 4px;
+    border: 1px solid #0077cc;
+    font-weight: 600;
+    text-align: center;
+  }
+  input[type=checkbox] {
+    margin-left: 0.5rem;
+    transform: scale(1.2);
+    cursor: pointer;
+  }
+  select {
+    width: 100%;
+    padding: 0.3rem;
+    border-radius: 6px;
+    border: 1px solid #0077cc;
+    font-weight: 600;
+  }
+
+  /* 履歴 */
+  #historySection {
+    width: 480px;
+    max-width: 90vw;
+    margin-bottom: 1rem;
   }
   #historyList {
-    max-height: 250px;
+    max-height: 200px;
     overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 0.5rem;
+    background: #eef7fb;
+    border-radius: 6px;
+    border: 2px solid #0077cc;
     padding: 0.5rem;
-    background: #fafafa;
   }
+  #historyList > div {
+    border-bottom: 1px solid #a0c1e0;
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+  }
+  #historyList > div:last-child {
+    border-bottom: none;
+  }
+  #historyList button {
+    margin-right: 0.4rem;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+    background: #005fa3;
+  }
+
+  /* QRコード */
   #qrCodeCanvas {
-    margin-top: 0.5rem;
-    max-width: 160px;
-    max-height: 160px;
+    display: block;
+    margin: 0.5rem auto;
+    border: 1px solid #0077cc;
+    border-radius: 6px;
+  }
+
+  /* テンプレート編集 */
+  #templateEditor {
+    width: 480px;
+    max-width: 90vw;
+    height: 140px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 2px solid #0077cc;
+    background: #e9f0f7;
+    resize: vertical;
+    margin-bottom: 0.5rem;
+  }
+  #templateBtns {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  #templateBtns button {
+    margin: 0 0.5rem;
+    background: #0077cc;
+  }
+
+  /* レスポンシブ */
+  @media screen and (max-width: 500px) {
+    #videoContainer, #feedbackText, #settings, #historySection, #templateEditor {
+      width: 100%;
+    }
   }
 </style>
+</head>
+<body>
+<h1>陸上フォーム解析アプリ</h1>
+
+<div id="videoContainer">
+  <video id="videoPreview" autoplay playsinline muted></video>
+  <canvas id="poseCanvas"></canvas>
+</div>
+
+<div id="controls">
+  <button id="startRecordBtn">録画開始</button>
+  <button id="stopRecordBtn" disabled>録画停止</button>
+  <button id="saveMp4Btn" disabled>MP4保存</button>
+  <button id="requestFeedbackBtn" disabled>AIフィードバック取得</button>
+  <button id="playFeedbackAudioBtn" disabled>音声読み上げ</button>
+</div>
+
+<textarea id="feedbackText" readonly placeholder="フィードバックがここに表示されます"></textarea>
+
+<div id="settings">
+  <label>遅延秒数
+    <input type="number" id="delayInput" min="0" max="60" value="5" />
+  </label>
+  <label>カウント音
+    <input type="checkbox" id="enableAudioCount" checked />
+  </label>
+  <label>モデル選択
+    <select id="poseModelSelect">
+      <option value="lite" selected>軽量モデル（初期）</option>
+      <option value="high">高精度モデル</option>
+    </select>
+  </label>
+</div>
+
+<section id="historySection">
+  <h2>録画履歴</h2>
+  <div id="historyList">履歴なし</div>
+  <button id="clearHistoryBtn">履歴クリア</button>
+  <canvas id="qrCodeCanvas" width="150" height="150"></canvas>
+</section>
+
+<section id="templateSection">
+  <h2>フィードバックテンプレート編集</h2>
+  <textarea id="templateEditor" spellcheck="false"></textarea>
+  <div id="templateBtns">
+    <button id="saveTemplateBtn">テンプレート保存</button>
+    <button id="resetTemplateBtn">テンプレート初期化</button>
+  </div>
+</section>
+
+<!-- 依存スクリプト -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.8.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
 <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-</head>
-<body>
-<header>陸上フォームAIコーチ Search-Up InsiderProgram</header>
-<div id="app">
-  <nav>
-    <button class="tabBtn active" data-tab="record">録画</button>
-    <button class="tabBtn" data-tab="feedback">AIフィードバック</button>
-    <button class="tabBtn" data-tab="history">履歴</button>
-    <button class="tabBtn" data-tab="template">テンプレ編集</button>
-    <button class="tabBtn" data-tab="settings">設定</button>
-  </nav>
-  <main>
-    <section id="record" class="tabContent">
-      <video id="videoPreview" autoplay muted playsinline></video>
-      <div>
-        <button id="startRecordBtn">録画開始</button>
-        <button id="stopRecordBtn" disabled>録画停止</button>
-        <label>遅延秒数 <input id="delayInput" type="number" min="0" max="60" value="5" /></label>
-        <button id="saveMp4Btn" disabled>MP4保存</button>
-      </div>
-      <div>
-        <label><input type="checkbox" id="enableAudioCount" checked /> 音声カウント有効</label>
-      </div>
-    </section>
-    <section id="feedback" class="tabContent" style="display:none;">
-      <button id="requestFeedbackBtn" disabled>AIフィードバック生成</button>
-      <textarea id="feedbackText" readonly placeholder="フィードバックがここに表示されます"></textarea>
-      <button id="playFeedbackAudioBtn" disabled>音声読み上げ</button>
-    </section>
-    <section id="history" class="tabContent" style="display:none;">
-      <div id="historyList"></div>
-      <button id="clearHistoryBtn">履歴クリア</button>
-      <canvas id="qrCodeCanvas"></canvas>
-    </section>
-    <section id="template" class="tabContent" style="display:none;">
-      <textarea id="templateEditor" style="height: 200px;"></textarea>
-      <button id="saveTemplateBtn">テンプレート保存</button>
-      <button id="resetTemplateBtn">デフォルトに戻す</button>
-    </section>
-    <section id="settings" class="tabContent" style="display:none;">
-      <label>姿勢推定モデル
-        <select id="poseModelSelect">
-          <option value="lite">軽量モデル (MediaPipe Pose)</option>
-          <option value="high">高精度モデル (MoveNet)</option>
-        </select>
-      </label>
-      <br />
-      <label>遅延秒数（最大60秒）
-        <input type="number" id="delaySettingInput" min="0" max="60" value="5" />
-      </label>
-      <br />
-      <label><input type="checkbox" id="enableAudioCountSetting" checked /> 音声カウント有効</label>
-    </section>
-  </main>
-</div>
-<script src=\"https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js\"></script>
-<script src=\"app.js\"></script>
+
+<!-- app.js をここに読み込み -->
+<script src="app.js"></script>
+
 </body>
 </html>
